@@ -2,37 +2,285 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>AgriFlow</title>
-  <style>
-    body { font-family: Arial; background:#f6f6f6; margin:0; }
-    header { background:#2e7d32; color:white; padding:20px; }
-    .container { padding:20px; }
-    .card { background:white; padding:15px; margin:10px 0; border-radius:10px; }
-    button { background:#2e7d32; color:white; padding:10px; border:none; border-radius:8px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgriFlow - Gestion agricole</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<header>
-  🌾 AgriFlow - Gestion agricole simple
+<header class="main-header">
+  <div class="header-content">
+    <h1>🌾 AgriFlow</h1>
+    <p>Gestion agricole simple et efficace</p>
+  </div>
+  <nav class="nav-menu">
+    <button class="nav-btn active" data-section="dashboard">📊 Dashboard</button>
+    <button class="nav-btn" data-section="commandes">📦 Commandes</button>
+    <button class="nav-btn" data-section="clients">👥 Clients</button>
+    <button class="nav-btn" data-section="factures">💰 Factures</button>
+  </nav>
 </header>
 
-<div class="container">
+<!-- DASHBOARD SECTION -->
+<section id="dashboard" class="section active">
+  <div class="container">
+    <h2>Tableau de bord</h2>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">💵</div>
+        <div class="stat-content">
+          <div class="stat-label">CA du mois</div>
+          <div class="stat-value" id="ca-value">18 450 €</div>
+          <div class="stat-trend positive">+12% vs mois dernier</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-content">
+          <div class="stat-label">Commandes</div>
+          <div class="stat-value" id="cmd-value">73</div>
+          <div class="stat-trend positive">5 en attente</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-content">
+          <div class="stat-label">Clients actifs</div>
+          <div class="stat-value" id="cli-value">28</div>
+          <div class="stat-trend neutral">2 nouveaux</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-content">
+          <div class="stat-label">Factures impayées</div>
+          <div class="stat-value" id="fact-value">6</div>
+          <div class="stat-trend negative">1 200 € à récupérer</div>
+        </div>
+      </div>
+    </div>
 
-  <h2>Dashboard</h2>
+    <div class="actions-section">
+      <h3>Actions rapides</h3>
+      <div class="actions-grid">
+        <button class="action-btn" onclick="openModal('modal-commande')">
+          ➕ Nouvelle commande
+        </button>
+        <button class="action-btn" onclick="openModal('modal-client')">
+          ➕ Ajouter un client
+        </button>
+        <button class="action-btn" onclick="showNotification('Factures exportées!', 'success')">
+          📥 Exporter factures
+        </button>
+        <button class="action-btn" onclick="resetData()">
+          🔄 Réinitialiser données
+        </button>
+      </div>
+    </div>
 
-  <div class="card">CA du mois : 18 450 €</div>
-  <div class="card">Commandes : 73</div>
-  <div class="card">Clients actifs : 28</div>
-  <div class="card">Factures impayées : 6</div>
+    <div class="chart-section">
+      <h3>Statistiques</h3>
+      <canvas id="revenueChart" width="400" height="100"></canvas>
+    </div>
+  </div>
+</section>
 
-  <h2>Actions rapides</h2>
+<!-- COMMANDES SECTION -->
+<section id="commandes" class="section">
+  <div class="container">
+    <h2>Gestion des commandes</h2>
+    
+    <div class="search-box">
+      <input type="text" id="search-cmd" placeholder="🔍 Rechercher une commande..." class="search-input">
+      <button class="btn-primary" onclick="openModal('modal-commande')">➕ Nouvelle</button>
+    </div>
 
-  <button>Nouvelle commande SMS</button>
-  <button>Voir clients</button>
-  <button>Factures</button>
+    <div id="cmd-list" class="list-container">
+      <div class="list-item">
+        <div class="list-header">
+          <span>#CMD001</span>
+          <span class="badge badge-success">Livrée</span>
+        </div>
+        <div class="list-details">Client: Jean Dupont | 1 250 € | 28/05/2026</div>
+        <div class="list-actions">
+          <button class="btn-sm btn-info" onclick="editItem('cmd', 1)">Modifier</button>
+          <button class="btn-sm btn-danger" onclick="deleteItem('cmd', 1)">Supprimer</button>
+        </div>
+      </div>
 
+      <div class="list-item">
+        <div class="list-header">
+          <span>#CMD002</span>
+          <span class="badge badge-warning">En cours</span>
+        </div>
+        <div class="list-details">Client: Marie Martin | 850 € | 29/05/2026</div>
+        <div class="list-actions">
+          <button class="btn-sm btn-info" onclick="editItem('cmd', 2)">Modifier</button>
+          <button class="btn-sm btn-danger" onclick="deleteItem('cmd', 2)">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLIENTS SECTION -->
+<section id="clients" class="section">
+  <div class="container">
+    <h2>Gestion des clients</h2>
+    
+    <div class="search-box">
+      <input type="text" id="search-clients" placeholder="🔍 Rechercher un client..." class="search-input">
+      <button class="btn-primary" onclick="openModal('modal-client')">➕ Nouveau client</button>
+    </div>
+
+    <div id="clients-list" class="list-container">
+      <div class="list-item">
+        <div class="list-header">
+          <span>Jean Dupont</span>
+          <span class="badge badge-success">Actif</span>
+        </div>
+        <div class="list-details">📧 jean@email.com | 📞 06 12 34 56 78 | 12 commandes</div>
+        <div class="list-actions">
+          <button class="btn-sm btn-info" onclick="editItem('client', 1)">Modifier</button>
+          <button class="btn-sm btn-danger" onclick="deleteItem('client', 1)">Supprimer</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-header">
+          <span>Marie Martin</span>
+          <span class="badge badge-success">Actif</span>
+        </div>
+        <div class="list-details">📧 marie@email.com | 📞 06 98 76 54 32 | 8 commandes</div>
+        <div class="list-actions">
+          <button class="btn-sm btn-info" onclick="editItem('client', 2)">Modifier</button>
+          <button class="btn-sm btn-danger" onclick="deleteItem('client', 2)">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FACTURES SECTION -->
+<section id="factures" class="section">
+  <div class="container">
+    <h2>Gestion des factures</h2>
+    
+    <div class="filter-box">
+      <select id="filter-status" class="filter-select" onchange="filterFactures()">
+        <option value="">Tous les statuts</option>
+        <option value="paid">Payées</option>
+        <option value="pending">En attente</option>
+        <option value="overdue">En retard</option>
+      </select>
+      <button class="btn-primary" onclick="openModal('modal-facture')">➕ Nouvelle facture</button>
+    </div>
+
+    <div id="factures-list" class="list-container">
+      <div class="list-item">
+        <div class="list-header">
+          <span>#FAC001</span>
+          <span class="badge badge-success">Payée</span>
+        </div>
+        <div class="list-details">Jean Dupont | 1 250 € | Échéance: 30/05/2026</div>
+        <div class="list-actions">
+          <button class="btn-sm btn-info" onclick="viewInvoice(1)">Voir</button>
+          <button class="btn-sm btn-danger" onclick="deleteItem('fact', 1)">Supprimer</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-header">
+          <span>#FAC002</span>
+          <span class="badge badge-warning">En attente</span>
+        </div>
+        <div class="list-details">Marie Martin | 850 € | Échéance: 05/06/2026</div>
+        <div class="list-actions">
+          <button class="btn-sm btn-info" onclick="viewInvoice(2)">Voir</button>
+          <button class="btn-sm btn-danger" onclick="deleteItem('fact', 2)">Supprimer</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-header">
+          <span>#FAC003</span>
+          <span class="badge badge-danger">En retard</span>
+        </div>
+        <div class="list-details">Pierre Moreau | 620 € | Échéance: 20/05/2026 ⚠️</div>
+        <div class="list-actions">
+          <button class="btn-sm btn-info" onclick="viewInvoice(3)">Voir</button>
+          <button class="btn-sm btn-danger" onclick="deleteItem('fact', 3)">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODALS -->
+<div id="modal-commande" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modal-commande')">&times;</span>
+    <h2>Nouvelle commande</h2>
+    <form onsubmit="submitForm(event, 'commande')">
+      <input type="text" placeholder="Numéro de commande" class="form-input" required>
+      <select class="form-input" required>
+        <option>-- Sélectionner un client --</option>
+        <option>Jean Dupont</option>
+        <option>Marie Martin</option>
+      </select>
+      <input type="number" placeholder="Montant (€)" class="form-input" required>
+      <input type="date" class="form-input" required>
+      <select class="form-input" required>
+        <option>-- Statut --</option>
+        <option>En cours</option>
+        <option>Livrée</option>
+        <option>Annulée</option>
+      </select>
+      <button type="submit" class="btn-primary">Créer</button>
+    </form>
+  </div>
 </div>
 
+<div id="modal-client" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modal-client')">&times;</span>
+    <h2>Ajouter un client</h2>
+    <form onsubmit="submitForm(event, 'client')">
+      <input type="text" placeholder="Nom du client" class="form-input" required>
+      <input type="email" placeholder="Email" class="form-input" required>
+      <input type="tel" placeholder="Téléphone" class="form-input" required>
+      <input type="text" placeholder="Adresse" class="form-input" required>
+      <button type="submit" class="btn-primary">Ajouter</button>
+    </form>
+  </div>
+</div>
+
+<div id="modal-facture" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('modal-facture')">&times;</span>
+    <h2>Nouvelle facture</h2>
+    <form onsubmit="submitForm(event, 'facture')">
+      <input type="text" placeholder="Numéro de facture" class="form-input" required>
+      <select class="form-input" required>
+        <option>-- Sélectionner un client --</option>
+        <option>Jean Dupont</option>
+        <option>Marie Martin</option>
+      </select>
+      <input type="number" placeholder="Montant (€)" class="form-input" required>
+      <input type="date" placeholder="Date d'émission" class="form-input" required>
+      <input type="date" placeholder="Date d'échéance" class="form-input" required>
+      <button type="submit" class="btn-primary">Créer</button>
+    </form>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div id="notification" class="notification"></div>
+
+<script src="script.js"></script>
 </body>
 </html>
