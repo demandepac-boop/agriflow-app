@@ -335,7 +335,6 @@ document.addEventListener('DOMContentLoaded', function() {
   DataManager.init();
   updateDisplay();
   
-  // Recherche Commandes
   const searchCmd = document.getElementById('search-cmd');
   if (searchCmd) {
     searchCmd.addEventListener('input', function() {
@@ -346,7 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Recherche Clients
   const searchClients = document.getElementById('search-clients');
   if (searchClients) {
     searchClients.addEventListener('input', function() {
@@ -357,7 +355,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Recherche Factures
   const searchFactures = document.getElementById('search-factures');
   if (searchFactures) {
     searchFactures.addEventListener('input', function() {
@@ -366,6 +363,11 @@ document.addEventListener('DOMContentLoaded', function() {
         filterAndSearchFactures();
       }, 300);
     });
+  }
+
+  const filterStatus = document.getElementById('filter-status');
+  if (filterStatus) {
+    filterStatus.addEventListener('change', filterAndSearchFactures);
   }
 });
 
@@ -381,16 +383,9 @@ let charts = {};
 function initCharts() {
   const data = DataManager.getAll();
   
-  // Graphique Chiffre d'affaires
   drawRevenueChart(data.factures);
-  
-  // Graphique Factures
   drawInvoiceChart(data.factures);
-  
-  // Graphique Commandes
   drawOrdersChart(data.commandes);
-  
-  // Graphique Top Clients
   drawClientsChart(data);
 }
 
@@ -503,7 +498,6 @@ function drawClientsChart(data) {
   
   if (charts.clients) charts.clients.destroy();
   
-  // Compter les commandes par client
   const clientCounts = {};
   data.commandes.forEach(cmd => {
     clientCounts[cmd.client] = (clientCounts[cmd.client] || 0) + 1;
@@ -548,7 +542,6 @@ function exportToPDF() {
   const data = DataManager.getAll();
   let yPos = 40;
   
-  // Factures
   doc.setFontSize(12);
   doc.text('📄 Factures', 14, yPos);
   yPos += 10;
@@ -564,7 +557,6 @@ function exportToPDF() {
   
   yPos = doc.lastAutoTable.finalY + 15;
   
-  // Commandes
   doc.addPage();
   doc.setFontSize(12);
   doc.text('📦 Commandes', 14, 22);
@@ -578,7 +570,6 @@ function exportToPDF() {
     theme: 'grid'
   });
   
-  // Résumé financier
   doc.addPage();
   doc.setFontSize(12);
   doc.text('💰 Résumé financier', 14, 22);
@@ -601,7 +592,6 @@ function exportToCSV() {
   const data = DataManager.getAll();
   let csv = 'AGRIFLOW - EXPORT COMPLET\n\n';
   
-  // Factures
   csv += 'FACTURES\n';
   csv += 'Numéro,Client,Montant,Date,Échéance,Statut\n';
   data.factures.forEach(f => {
@@ -659,7 +649,7 @@ function downloadCSV(csv, filename) {
   showNotification(`${filename} téléchargé avec succès! 📊`, 'success');
 }
 
-// Initialiser les graphiques quand on change de section
+// Initialiser les graphiques
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', function() {
