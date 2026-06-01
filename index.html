@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AgriFlow - Gestion agricole</title>
   <link rel="stylesheet" href="styles.css" />
+  <!-- Chart.js pour les graphiques -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <!-- jsPDF + autoTable pour l'export PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.31/dist/autotable.min.js"></script>
 </head>
 <body>
 
@@ -73,18 +78,37 @@
         <button class="action-btn" onclick="openModal('modal-client')">
           ➕ Ajouter un client
         </button>
-        <button class="action-btn" onclick="showNotification('Factures exportées!', 'success')">
-          📥 Exporter factures
+        <button class="action-btn" onclick="exportToPDF()">
+          📄 Export PDF
         </button>
-        <button class="action-btn" onclick="resetData()">
-          🔄 Réinitialiser données
+        <button class="action-btn" onclick="exportToCSV()">
+          📊 Export CSV
         </button>
       </div>
     </div>
 
-    <div class="chart-section">
-      <h3>Statistiques</h3>
-      <canvas id="revenueChart" width="400" height="100"></canvas>
+    <div class="charts-grid">
+      <div class="chart-section">
+        <h3>Chiffre d'affaires (6 derniers mois)</h3>
+        <canvas id="revenueChart"></canvas>
+      </div>
+      
+      <div class="chart-section">
+        <h3>Statut des factures</h3>
+        <canvas id="invoiceChart"></canvas>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-section">
+        <h3>Commandes par statut</h3>
+        <canvas id="ordersChart"></canvas>
+      </div>
+      
+      <div class="chart-section">
+        <h3>Top clients</h3>
+        <canvas id="clientsChart"></canvas>
+      </div>
     </div>
   </div>
 </section>
@@ -95,35 +119,12 @@
     <h2>Gestion des commandes</h2>
     
     <div class="search-box">
-      <input type="text" id="search-cmd" placeholder="🔍 Rechercher une commande..." class="search-input">
+      <input type="text" id="search-cmd" placeholder="🔍 Rechercher par numéro, client ou montant..." class="search-input">
       <button class="btn-primary" onclick="openModal('modal-commande')">➕ Nouvelle</button>
+      <button class="btn-primary" style="background: #ff9800;" onclick="exportCommandesCSV()">📊 Export</button>
     </div>
 
-    <div id="cmd-list" class="list-container">
-      <div class="list-item">
-        <div class="list-header">
-          <span>#CMD001</span>
-          <span class="badge badge-success">Livrée</span>
-        </div>
-        <div class="list-details">Client: Jean Dupont | 1 250 € | 28/05/2026</div>
-        <div class="list-actions">
-          <button class="btn-sm btn-info" onclick="editItem('cmd', 1)">Modifier</button>
-          <button class="btn-sm btn-danger" onclick="deleteItem('cmd', 1)">Supprimer</button>
-        </div>
-      </div>
-
-      <div class="list-item">
-        <div class="list-header">
-          <span>#CMD002</span>
-          <span class="badge badge-warning">En cours</span>
-        </div>
-        <div class="list-details">Client: Marie Martin | 850 € | 29/05/2026</div>
-        <div class="list-actions">
-          <button class="btn-sm btn-info" onclick="editItem('cmd', 2)">Modifier</button>
-          <button class="btn-sm btn-danger" onclick="deleteItem('cmd', 2)">Supprimer</button>
-        </div>
-      </div>
-    </div>
+    <div id="cmd-list" class="list-container"></div>
   </div>
 </section>
 
@@ -133,35 +134,12 @@
     <h2>Gestion des clients</h2>
     
     <div class="search-box">
-      <input type="text" id="search-clients" placeholder="🔍 Rechercher un client..." class="search-input">
+      <input type="text" id="search-clients" placeholder="🔍 Rechercher par nom, email ou téléphone..." class="search-input">
       <button class="btn-primary" onclick="openModal('modal-client')">➕ Nouveau client</button>
+      <button class="btn-primary" style="background: #ff9800;" onclick="exportClientsCSV()">📊 Export</button>
     </div>
 
-    <div id="clients-list" class="list-container">
-      <div class="list-item">
-        <div class="list-header">
-          <span>Jean Dupont</span>
-          <span class="badge badge-success">Actif</span>
-        </div>
-        <div class="list-details">📧 jean@email.com | 📞 06 12 34 56 78 | 12 commandes</div>
-        <div class="list-actions">
-          <button class="btn-sm btn-info" onclick="editItem('client', 1)">Modifier</button>
-          <button class="btn-sm btn-danger" onclick="deleteItem('client', 1)">Supprimer</button>
-        </div>
-      </div>
-
-      <div class="list-item">
-        <div class="list-header">
-          <span>Marie Martin</span>
-          <span class="badge badge-success">Actif</span>
-        </div>
-        <div class="list-details">📧 marie@email.com | 📞 06 98 76 54 32 | 8 commandes</div>
-        <div class="list-actions">
-          <button class="btn-sm btn-info" onclick="editItem('client', 2)">Modifier</button>
-          <button class="btn-sm btn-danger" onclick="deleteItem('client', 2)">Supprimer</button>
-        </div>
-      </div>
-    </div>
+    <div id="clients-list" class="list-container"></div>
   </div>
 </section>
 
@@ -171,52 +149,18 @@
     <h2>Gestion des factures</h2>
     
     <div class="filter-box">
-      <select id="filter-status" class="filter-select" onchange="filterFactures()">
+      <input type="text" id="search-factures" placeholder="🔍 Rechercher par numéro ou client..." class="search-input">
+      <select id="filter-status" class="filter-select" onchange="filterAndSearchFactures()">
         <option value="">Tous les statuts</option>
-        <option value="paid">Payées</option>
-        <option value="pending">En attente</option>
-        <option value="overdue">En retard</option>
+        <option value="Payée">Payées</option>
+        <option value="En attente">En attente</option>
+        <option value="En retard">En retard</option>
       </select>
       <button class="btn-primary" onclick="openModal('modal-facture')">➕ Nouvelle facture</button>
+      <button class="btn-primary" style="background: #ff9800;" onclick="exportFacturesCSV()">📊 Export</button>
     </div>
 
-    <div id="factures-list" class="list-container">
-      <div class="list-item">
-        <div class="list-header">
-          <span>#FAC001</span>
-          <span class="badge badge-success">Payée</span>
-        </div>
-        <div class="list-details">Jean Dupont | 1 250 € | Échéance: 30/05/2026</div>
-        <div class="list-actions">
-          <button class="btn-sm btn-info" onclick="viewInvoice(1)">Voir</button>
-          <button class="btn-sm btn-danger" onclick="deleteItem('fact', 1)">Supprimer</button>
-        </div>
-      </div>
-
-      <div class="list-item">
-        <div class="list-header">
-          <span>#FAC002</span>
-          <span class="badge badge-warning">En attente</span>
-        </div>
-        <div class="list-details">Marie Martin | 850 € | Échéance: 05/06/2026</div>
-        <div class="list-actions">
-          <button class="btn-sm btn-info" onclick="viewInvoice(2)">Voir</button>
-          <button class="btn-sm btn-danger" onclick="deleteItem('fact', 2)">Supprimer</button>
-        </div>
-      </div>
-
-      <div class="list-item">
-        <div class="list-header">
-          <span>#FAC003</span>
-          <span class="badge badge-danger">En retard</span>
-        </div>
-        <div class="list-details">Pierre Moreau | 620 € | Échéance: 20/05/2026 ⚠️</div>
-        <div class="list-actions">
-          <button class="btn-sm btn-info" onclick="viewInvoice(3)">Voir</button>
-          <button class="btn-sm btn-danger" onclick="deleteItem('fact', 3)">Supprimer</button>
-        </div>
-      </div>
-    </div>
+    <div id="factures-list" class="list-container"></div>
   </div>
 </section>
 
@@ -281,6 +225,6 @@
 <!-- NOTIFICATION -->
 <div id="notification" class="notification"></div>
 
-<script src="script.js"></script>
+<script src="script-phase2.js"></script>
 </body>
 </html>
